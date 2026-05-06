@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. History EOC Practice Simulation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f3f5f8;
+    color: #1a1a1a;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ---------- GATE SCREEN ---------- */
+  #gate {
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #gate.active { display: flex; }
+  .gate-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+  }
+  .gate-card h1 {
+    color: #1F3864;
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+  .gate-card .subtitle {
+    color: #5a6470;
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+  .gate-card label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 16px;
+    color: #2c3540;
+    font-size: 14px;
+  }
+  .gate-card input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #d4dae3;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  .gate-card input[type="text"]:focus {
+    outline: none;
+    border-color: #2E5395;
+  }
+  .block-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .block-btn {
+    padding: 14px;
+    background: #fff;
+    border: 2px solid #d4dae3;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .block-btn:hover { border-color: #2E5395; }
+  .block-btn.selected {
+    background: #2E5395;
+    color: #fff;
+    border-color: #2E5395;
+  }
+  .gate-overview {
+    background: #f8f9fb;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 24px 0 8px 0;
+    font-size: 13px;
+    color: #5a6470;
+    line-height: 1.6;
+  }
+  .gate-overview strong { color: #2c3540; }
+  .start-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: #1F3864;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .start-btn:hover:not(:disabled) { background: #15294a; }
+  .start-btn:disabled {
+    background: #b8c0cc;
+    cursor: not-allowed;
+  }
+  .gate-error {
+    color: #c0392b;
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  /* ---------- TEST SCREEN ---------- */
+  #test { display: none; }
+  #test.active { display: grid; }
+  #test {
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+  }
+  .palette {
+    background: #1F3864;
+    color: #fff;
+    padding: 16px;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .palette h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    color: #c5d3e8;
+  }
+  .palette .student-info {
+    font-size: 13px;
+    color: #a8b8d0;
+    margin-bottom: 16px;
+    word-break: break-word;
+  }
+  .palette .timer {
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .palette .timer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #a8b8d0;
+  }
+  .palette .timer-value {
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .pal-cell {
+    aspect-ratio: 1;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.1s;
+  }
+  .pal-cell:hover { border-color: rgba(255,255,255,0.5); }
+  .pal-cell.answered {
+    background: #5b8bd9;
+    border-color: #5b8bd9;
+  }
+  .pal-cell.current {
+    background: #f4b400;
+    color: #1a1a1a;
+    border-color: #f4b400;
+  }
+  .pal-cell.flagged::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background: #ff6b6b;
+    border-radius: 50%;
+  }
+  .palette-legend {
+    font-size: 11px;
+    color: #a8b8d0;
+    line-height: 1.7;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+  .legend-swatch.answered { background: #5b8bd9; border-color: #5b8bd9; }
+  .legend-swatch.current { background: #f4b400; border-color: #f4b400; }
+  .legend-swatch.unanswered { background: rgba(255,255,255,0.05); }
+  .legend-swatch.flagged-marker {
+    background: rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .legend-swatch.flagged-marker::after {
+    content: "";
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 5px;
+    height: 5px;
+    background: #ff6b6b;
+    border-radius: 50%;
+  }
+
+  .question-area {
+    padding: 32px 40px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .q-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+  .q-header-left .q-num {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a6470;
+    font-weight: 600;
+  }
+  .q-header-left .q-domain {
+    color: #2E5395;
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .vocab-flag-btn {
+    background: #fff;
+    border: 2px solid #d4dae3;
+    color: #5a6470;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .vocab-flag-btn:hover { border-color: #f4b400; }
+  .vocab-flag-btn.flagged {
+    background: #fff3d4;
+    border-color: #f4b400;
+    color: #8a6914;
+  }
+  .vocab-flag-btn .icon {
+    font-size: 14px;
+  }
+  .q-instruction {
+    background: #fff8e1;
+    border-left: 4px solid #f4b400;
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #5d4a14;
+    border-radius: 0 4px 4px 0;
+  }
+  .q-stimulus {
+    background: #fafbfc;
+    border-left: 4px solid #2E5395;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    border-radius: 0 6px 6px 0;
+    font-size: 15px;
+    line-height: 1.65;
+    color: #2c3540;
+  }
+  .q-source-attr {
+    display: block;
+    text-align: right;
+    font-style: italic;
+    color: #5a6470;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  .q-table-wrap {
+    background: #fff;
+    border: 1px solid #d4dae3;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .q-table-caption {
+    padding: 10px 16px;
+    background: #f0f3f7;
+    font-weight: 600;
+    font-size: 14px;
+    color: #2c3540;
+    border-bottom: 1px solid #d4dae3;
+    text-align: center;
+  }
+  .q-table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .q-table-wrap th {
+    background: #1F3864;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .q-table-wrap td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e5e9ef;
+    font-size: 14px;
+  }
+  .q-table-wrap tr:last-child td { border-bottom: none; }
+  .q-stem {
+    background: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+  }
+  .q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .opt {
+    background: #fff;
+    border: 2px solid #d4dae3;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.5;
+  }
+  .opt:hover { border-color: #2E5395; background: #f8fafd; }
+  .opt.selected {
+    background: #e8f0fa;
+    border-color: #2E5395;
+  }
+  .opt-letter {
+    background: #f0f3f7;
+    color: #5a6470;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .opt.selected .opt-letter {
+    background: #2E5395;
+    color: #fff;
+  }
+  .opt-text { flex: 1; padding-top: 4px; }
+
+  /* Drag-and-drop */
+  .dd-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .dd-source-zone {
+    background: #fff;
+    border: 2px dashed #d4dae3;
+    border-radius: 8px;
+    padding: 12px;
+    min-height: 80px;
+  }
+  .dd-source-zone-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a6470;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .dd-source-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 50px;
+  }
+  .dd-target-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .dd-slot {
+    background: #fff;
+    border: 2px solid #d4dae3;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+  }
+  .dd-slot.match-slot {
+    flex-direction: row;
+  }
+  .dd-slot-label {
+    font-weight: 600;
+    color: #2E5395;
+    min-width: 60px;
+    font-size: 14px;
+  }
+  .dd-match-prompt {
+    flex: 1;
+    color: #1a1a1a;
+    font-size: 14px;
+  }
+  .dd-drop-area {
+    flex: 1;
+    min-height: 36px;
+    border: 2px dashed #d4dae3;
+    border-radius: 6px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .dd-drop-area.drag-over {
+    background: #e8f0fa;
+    border-color: #2E5395;
+  }
+  .dd-item {
+    background: #f0f3f7;
+    border: 2px solid #c5d0dd;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: grab;
+    font-size: 14px;
+    user-select: none;
+    line-height: 1.3;
+  }
+  .dd-item:active { cursor: grabbing; }
+  .dd-item.dragging { opacity: 0.4; }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e9ef;
+  }
+  .nav-btn {
+    padding: 12px 24px;
+    border-radius: 6px;
+    border: 2px solid #d4dae3;
+    background: #fff;
+    color: #2c3540;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover:not(:disabled) { border-color: #2E5395; }
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .nav-btn.primary {
+    background: #1F3864;
+    color: #fff;
+    border-color: #1F3864;
+  }
+  .nav-btn.primary:hover:not(:disabled) { background: #15294a; }
+  .nav-btn.submit-btn {
+    background: #2c8f3a;
+    color: #fff;
+    border-color: #2c8f3a;
+  }
+  .nav-btn.submit-btn:hover:not(:disabled) { background: #226e2c; }
+
+  /* ---------- SUBMITTING SCREEN ---------- */
+  #submitting {
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+  #submitting.active { display: flex; }
+  .submit-msg {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .submit-msg h2 { color: #1F3864; margin-bottom: 12px; }
+  .spinner {
+    border: 4px solid #e5e9ef;
+    border-top-color: #2E5395;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 0.8s linear infinite;
+    margin: 16px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- RESULTS SCREEN ---------- */
+  #results { display: none; }
+  #results.active { display: block; }
+  #results { padding: 24px; max-width: 1000px; margin: 0 auto; }
+  .results-header {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .results-header .student-line {
+    color: #5a6470;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .results-header h1 {
+    color: #1F3864;
+    margin-bottom: 16px;
+    font-size: 24px;
+  }
+  .achievement-badge {
+    display: inline-block;
+    padding: 16px 32px;
+    border-radius: 100px;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 8px 0 16px 0;
+  }
+  .achievement-badge.beginning { background: #f8cecc; color: #92231a; }
+  .achievement-badge.developing { background: #fff2cc; color: #7a5d12; }
+  .achievement-badge.proficient { background: #d9ead3; color: #2e632d; }
+  .achievement-badge.distinguished { background: #b6d7a8; color: #1f4818; }
+  .scale-score-line {
+    font-size: 13px;
+    color: #5a6470;
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+  .scale-score-line strong { color: #2c3540; }
+  .scale-score-note {
+    font-size: 11px;
+    color: #8693a3;
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .results-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .stat-card {
+    background: #f8f9fb;
+    padding: 14px;
+    border-radius: 8px;
+  }
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a6470;
+    font-weight: 600;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1F3864;
+    margin-top: 2px;
+  }
+
+  .results-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .results-card h2 {
+    color: #1F3864;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .domain-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .domain-bar-row {
+    display: grid;
+    grid-template-columns: 250px 1fr 60px;
+    gap: 14px;
+    align-items: center;
+  }
+  .domain-bar-label {
+    font-size: 14px;
+    color: #2c3540;
+    font-weight: 500;
+  }
+  .domain-bar-track {
+    height: 22px;
+    background: #f0f3f7;
+    border-radius: 11px;
+    overflow: hidden;
+    position: relative;
+  }
+  .domain-bar-fill {
+    height: 100%;
+    border-radius: 11px;
+    transition: width 0.6s ease;
+  }
+  .domain-bar-fill.lo { background: #d96157; }
+  .domain-bar-fill.mid { background: #f4b400; }
+  .domain-bar-fill.hi { background: #4caf50; }
+  .domain-bar-pct {
+    text-align: right;
+    font-weight: 600;
+    color: #2c3540;
+  }
+
+  .review-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+  .review-item {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+  }
+  .review-item.correct { background: #4caf50; }
+  .review-item.incorrect { background: #d96157; }
+  .review-item .num {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .review-item .mark {
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .review-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #5a6470;
+  }
+  .review-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .review-swatch.correct { background: #4caf50; }
+  .review-swatch.incorrect { background: #d96157; }
+
+  .vocab-flag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .vocab-flag-tag {
+    background: #fff3d4;
+    border: 1px solid #f4b400;
+    color: #8a6914;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .vocab-flag-tag .domain-mini {
+    color: #5a6470;
+    font-weight: 400;
+    margin-left: 4px;
+    font-size: 11px;
+  }
+  .empty-state {
+    color: #8693a3;
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  @media (max-width: 720px) {
+    #test { grid-template-columns: 1fr; }
+    .palette { position: relative; height: auto; }
+    .results-stats { grid-template-columns: repeat(2, 1fr); }
+    .domain-bar-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ GATE SCREEN ============ -->
+<div id="gate" class="screen active">
+  <div class="gate-card">
+    <h1>U.S. History EOC Practice</h1>
+    <div class="subtitle">Georgia Milestones End-of-Course Practice Simulation</div>
+
+    <label for="studentName">Full Name</label>
+    <input type="text" id="studentName" autocomplete="off" placeholder="First and last name">
+
+    <label>Block</label>
+    <div class="block-grid">
+      <button type="button" class="block-btn" data-block="1">1</button>
+      <button type="button" class="block-btn" data-block="2">2</button>
+      <button type="button" class="block-btn" data-block="3">3</button>
+      <button type="button" class="block-btn" data-block="4">4</button>
+    </div>
+
+    <div class="gate-overview">
+      <strong>What to expect:</strong> 45 questions covering all five U.S. History domains. Allow about 55 minutes. You can flag any term you don’t know with the Vocabulary Flag button on each item — your teacher will see what to reteach.
+    </div>
+
+    <div class="gate-error" id="gateError"></div>
+    <button type="button" class="start-btn" id="startBtn" disabled>Start Practice Test</button>
+  </div>
+</div>
+
+<!-- ============ TEST SCREEN ============ -->
+<div id="test" class="screen">
+  <aside class="palette">
+    <h2>Question Palette</h2>
+    <div class="student-info" id="paletteStudent"></div>
+    <div class="timer">
+      <div class="timer-label">Time Elapsed</div>
+      <div class="timer-value" id="timerValue">0:00</div>
+    </div>
+    <div class="palette-grid" id="paletteGrid"></div>
+    <div class="palette-legend">
+      <div class="legend-item"><span class="legend-swatch current"></span> Current</div>
+      <div class="legend-item"><span class="legend-swatch answered"></span> Answered</div>
+      <div class="legend-item"><span class="legend-swatch unanswered"></span> Not yet</div>
+      <div class="legend-item"><span class="legend-swatch flagged-marker"></span> Flagged vocab</div>
+    </div>
+  </aside>
+
+  <main class="question-area">
+    <div class="q-header">
+      <div class="q-header-left">
+        <div class="q-num" id="qNum">Question 1 of 42</div>
+        <div class="q-domain" id="qDomain"></div>
+      </div>
+      <button type="button" class="vocab-flag-btn" id="vocabFlagBtn">
+        <span class="icon">⚑</span>
+        <span class="label">Flag Vocabulary</span>
+      </button>
+    </div>
+
+    <div class="q-instruction" id="qInstruction" style="display:none;"></div>
+    <div id="qStimulus"></div>
+    <div class="q-stem" id="qStem"></div>
+    <div id="qBody"></div>
+
+    <div class="nav-row">
+      <button type="button" class="nav-btn" id="prevBtn">← Previous</button>
+      <button type="button" class="nav-btn primary" id="nextBtn">Next →</button>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SUBMITTING SCREEN ============ -->
+<div id="submitting" class="screen">
+  <div class="submit-msg">
+    <h2>Submitting your results...</h2>
+    <div class="spinner"></div>
+    <p>Don't close this window.</p>
+  </div>
+</div>
+
+<!-- ============ RESULTS SCREEN ============ -->
+<div id="results" class="screen">
+  <div class="results-header">
+    <div class="student-line" id="resultsStudentLine"></div>
+    <h1>Your Results</h1>
+    <div class="achievement-badge" id="achievementBadge"></div>
+    <div class="scale-score-line" id="scaleScoreLine"></div>
+    <div class="scale-score-note">On the actual GA Milestones EOC, this achievement level corresponds to the Scale Score range above. This practice test reports the Grade Conversion percent only.</div>
+    <div class="results-stats">
+      <div class="stat-card">
+        <div class="stat-label">Score</div>
+        <div class="stat-value" id="statScore"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Percent</div>
+        <div class="stat-value" id="statPercent"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Time Used</div>
+        <div class="stat-value" id="statTime"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Vocab Flags</div>
+        <div class="stat-value" id="statFlags"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-card">
+    <h2>Performance by Domain</h2>
+    <div class="domain-bars" id="domainBars"></div>
+  </div>
+
+  <div class="results-card">
+    <h2>Question-by-Question Review</h2>
+    <p style="font-size:13px;color:#5a6470;margin-bottom:14px;">Right or wrong only — answer keys aren't shown. Use this with your teacher.</p>
+    <div class="review-list" id="reviewList"></div>
+    <div class="review-legend">
+      <div><span class="review-swatch correct"></span>Correct</div>
+      <div><span class="review-swatch incorrect"></span>Incorrect</div>
+    </div>
+  </div>
+
+  <div class="results-card">
+    <h2>Vocabulary You Flagged</h2>
+    <div id="vocabFlagSection"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzkextYuh6LsMVgZ3Ym0VlGS-L-k8hSndTzrR3q5wDi8EootQ5Zs-8vbfUhyE2yfBei/exec';
+
+// ============================================================
+// DOMAIN DEFINITIONS
+// ============================================================
+const DOMAINS = {
+  D1: 'Colonization through the Constitution',
+  D2: 'New Republic through Reconstruction',
+  D3: 'Industrialization, Reform, & Imperialism',
+  D4: 'Establishment as a World Power',
+  D5: 'Post-World War II to the Present'
+};
+
+// ============================================================
+// ITEM BANK (42 items)
+// Types: SR=single, MS=multi-select, DD=drag-drop (order or match)
+// ============================================================
+const ITEMS = [
+  // ----- DOMAIN 1: Colonization through the Constitution (7 items) -----
+  {
+    n: 1, type: 'SR', domain: 'D1', dok: 2, std: 'SSUSH1a',
+    stem: 'Under the system of mercantilism, England regulated colonial trade primarily to:',
+    options: [
+      'Establish democratic governance in the colonies',
+      'Allow the colonies to trade freely with all European nations',
+      'Promote religious unity in the colonies',
+      'Increase wealth in the mother country by controlling exports and imports'
+    ],
+    correct: 3
+  },
+  {
+    n: 2, type: 'SR', domain: 'D1', dok: 1, std: 'SSUSH2b',
+    stem: 'The Middle Passage refers to:',
+    options: [
+      'The forced transport of enslaved Africans across the Atlantic Ocean',
+      'The migration of pilgrims from Holland to England',
+      'The British naval route through the Caribbean',
+      'The trade route between Spain and the Americas'
+    ],
+    correct: 0
+  },
+  {
+    n: 3, type: 'SR', domain: 'D1', dok: 2, std: 'SSUSH3b',
+    stem: 'Colonists organized as the Sons of Liberty and Committees of Correspondence in response to:',
+    options: [
+      'British taxation policies such as the Stamp Act',
+      'Conflicts with the French in Canada',
+      'Religious persecution by the Anglican Church',
+      'The expansion of slavery into northern colonies'
+    ],
+    correct: 0
+  },
+  {
+    n: 4, type: 'MS', domain: 'D1', dok: 3, std: 'SSUSH3a/SSUSH4f',
+    stem: 'Select ALL correct statements about the Treaties of Paris signed in 1763 and 1783.',
+    options: [
+      'The 1783 treaty granted the U.S. full control of Canada',
+      'The 1763 treaty contributed to tensions over British taxation of the colonies',
+      'The 1763 treaty ended the French and Indian War',
+      'Both treaties forced England to recognize American independence',
+      'The 1783 treaty established the western boundary of the U.S. at the Mississippi River'
+    ],
+    correct: [1, 2, 4]
+  },
+  {
+    n: 5, type: 'SR', domain: 'D1', dok: 2, std: 'SSUSH5d',
+    stem: 'The most consistent argument made by Anti-Federalists during the Constitution ratification debates was that:',
+    options: [
+      'The Bill of Rights should be eliminated',
+      'The Constitution lacked sufficient protections for individual rights',
+      'The new government would be too weak to protect against foreign invasion',
+      'The federal government should control state economic policy'
+    ],
+    correct: 1
+  },
+  {
+    n: 6, type: 'DD_ORDER', domain: 'D1', dok: 2, std: 'SSUSH3-4',
+    stem: 'Drag the following events into chronological order, earliest to latest.',
+    items: [
+      'French and Indian War ends',
+      'Stamp Act passed',
+      'Declaration of Independence signed',
+      'Battle of Yorktown',
+      'Treaty of Paris (1783)'
+    ],
+    correctOrder: [0, 1, 2, 3, 4]
+  },
+  {
+    n: 7, type: 'SR', domain: 'D1', dok: 2, std: 'SSUSH5c',
+    stem: 'The Great Compromise resolved a major dispute at the Constitutional Convention by:',
+    options: [
+      'Eliminating the institution of slavery in the northern states',
+      'Limiting presidential terms to four years',
+      'Allowing only landowners to vote in federal elections',
+      'Creating a bicameral legislature with proportional representation in one house and equal representation in the other'
+    ],
+    correct: 3
+  },
+
+  // ----- DOMAIN 2: New Republic through Reconstruction (8 items) -----
+  {
+    n: 8, type: 'SR', domain: 'D2', dok: 2, std: 'SSUSH6a',
+    stem: 'George Washington\u2019s decision to step down after two terms as president established a precedent that was:',
+    options: [
+      'Immediately broken by John Adams',
+      'Required by the original Constitution',
+      'Designed to favor the Federalist Party',
+      'Followed informally until being codified by the 22nd Amendment'
+    ],
+    correct: 3
+  },
+  {
+    n: 9, type: 'SR', domain: 'D2', dok: 2, std: 'SSUSH6c',
+    stem: 'Thomas Jefferson\u2019s purchase of the Louisiana Territory was significant because it:',
+    options: [
+      'Eliminated the threat of Native American resistance to expansion',
+      'Doubled the size of the United States and raised constitutional questions about presidential power',
+      'Returned the territory to French control',
+      'Allowed the abolition of slavery in all new western states'
+    ],
+    correct: 1
+  },
+  {
+    n: 10, type: 'SR', domain: 'D2', dok: 2, std: 'SSUSH7a',
+    stem: 'One major change associated with Jacksonian Democracy was:',
+    options: [
+      'The expansion of voting rights to all American citizens regardless of race or gender',
+      'The elimination of the Electoral College',
+      'The granting of statehood to all U.S. territories',
+      'The expansion of suffrage to most adult white men, regardless of property ownership'
+    ],
+    correct: 3
+  },
+  {
+    n: 11, type: 'MS', domain: 'D2', dok: 3, std: 'SSUSH8e',
+    stem: 'Select ALL events that contributed to growing sectional tensions leading to the Civil War.',
+    options: [
+      'The Kansas-Nebraska Act',
+      'The signing of the Treaty of Paris (1783)',
+      'John Brown\u2019s raid on Harper\u2019s Ferry',
+      'The Louisiana Purchase',
+      'The election of Abraham Lincoln in 1860',
+      'The Scott v. Sanford decision'
+    ],
+    correct: [0, 2, 4, 5]
+  },
+  {
+    n: 12, type: 'SR', domain: 'D2', dok: 2, std: 'SSUSH9b',
+    stem: 'Lincoln\u2019s primary purpose in issuing the Emancipation Proclamation was to:',
+    options: [
+      'Persuade Britain to enter the war on the Union side',
+      'Reframe the war as a fight against slavery and weaken the Confederacy',
+      'Punish southern landowners for starting the war',
+      'Free all enslaved people in the United States immediately'
+    ],
+    correct: 1
+  },
+  {
+    n: 13, type: 'SR', domain: 'D2', dok: 1, std: 'SSUSH10',
+    stem: 'Reconstruction refers to:',
+    options: [
+      'The rebuilding of American cities after WWII',
+      'The economic recovery period following the Great Depression',
+      'The expansion of railroads across the western territories',
+      'The post-Civil War period when the federal government attempted to rebuild the South and integrate freed people into society'
+    ],
+    correct: 3
+  },
+  {
+    n: 14, type: 'MS', domain: 'D2', dok: 3, std: 'SSUSH10a',
+    stem: 'Select ALL statements that describe Congressional (Radical) Reconstruction.',
+    options: [
+      'It established the Freedmen\u2019s Bureau over presidential objection',
+      'It largely allowed former Confederate leaders to return to power immediately',
+      'It was generally more lenient than Presidential Reconstruction',
+      'It required ratification of the 14th Amendment for southern states to rejoin the Union',
+      'It imposed military districts on the former Confederacy'
+    ],
+    correct: [0, 3, 4]
+  },
+  {
+    n: 15, type: 'DD_MATCH', domain: 'D2', dok: 2, std: 'SSUSH10c',
+    stem: 'Drag each amendment to the description that matches it.',
+    prompts: [
+      { label: '13th Amendment', correctItem: 1 },
+      { label: '14th Amendment', correctItem: 2 },
+      { label: '15th Amendment', correctItem: 0 }
+    ],
+    items: [
+      'Granted voting rights regardless of race',
+      'Abolished slavery and involuntary servitude',
+      'Granted citizenship and equal protection under the law'
+    ]
+  },
+
+  // ----- DOMAIN 3: Industrialization, Reform, Imperialism (7 items) -----
+  {
+    n: 16, type: 'SR', domain: 'D3', dok: 2, std: 'SSUSH11a',
+    stem: 'The expansion of railroads in the late 1800s most directly led to:',
+    options: [
+      'A decline in U.S. steel production',
+      'The end of westward migration',
+      'Massive growth in the steel and oil industries to support railroad construction and operation',
+      'A reduction in immigration to the United States'
+    ],
+    correct: 2
+  },
+  {
+    n: 17, type: 'SR', domain: 'D3', dok: 2, std: 'SSUSH11b',
+    stem: 'John D. Rockefeller and Andrew Carnegie are most associated with:',
+    options: [
+      'Pioneering progressive labor reforms in their factories',
+      'The rise of trusts and monopolies through vertical and horizontal integration in oil and steel',
+      'The founding of major American universities only',
+      'The leadership of major labor unions'
+    ],
+    correct: 1
+  },
+  {
+    n: 18, type: 'SR', domain: 'D3', dok: 2, std: 'SSUSH12b',
+    stem: 'Westward expansion in the late 19th century affected the Plains Indians most directly by:',
+    options: [
+      'Destroying the bison populations and forcing them onto reservations',
+      'Returning ancestral lands seized by the U.S. government',
+      'Granting them U.S. citizenship and full voting rights',
+      'Establishing a network of Plains Indian-led territories'
+    ],
+    correct: 0
+  },
+  {
+    n: 19, type: 'MS', domain: 'D3', dok: 3, std: 'SSUSH13',
+    stem: 'Select ALL reforms or changes that came out of the Progressive Era.',
+    options: [
+      'The forced removal of Native Americans from the southeastern United States',
+      'Establishment of the National Park System and conservation policy',
+      'Repeal of the federal income tax',
+      'Direct election of U.S. senators (17th Amendment)',
+      'Federal regulation of food and drug safety',
+      'Women\u2019s suffrage (19th Amendment)'
+    ],
+    correct: [1, 3, 4, 5]
+  },
+  {
+    n: 20, type: 'SR', domain: 'D3', dok: 1, std: 'SSUSH13c',
+    stem: 'The Supreme Court decision in Plessy v. Ferguson (1896) established the legal doctrine of:',
+    options: [
+      '"Innocent until proven guilty"',
+      '"Separate but equal"',
+      '"Strict scrutiny"',
+      '"One person, one vote"'
+    ],
+    correct: 1
+  },
+  {
+    n: 21, type: 'SR', domain: 'D3', dok: 2, std: 'SSUSH14a',
+    stem: 'The Spanish-American War of 1898 contributed to American imperialism by:',
+    options: [
+      'Forcing the U.S. to give up control of Hawaii',
+      'Resulting in U.S. acquisition of overseas territories such as Puerto Rico, Guam, and the Philippines',
+      'Establishing diplomatic ties with the Soviet Union',
+      'Ending all U.S. involvement in Latin America'
+    ],
+    correct: 1
+  },
+  {
+    n: 22, type: 'SR', domain: 'D3', dok: 2, std: 'SSUSH14b',
+    stem: 'The Roosevelt Corollary to the Monroe Doctrine asserted that:',
+    options: [
+      'The U.S. had the right to intervene in Latin American countries to maintain stability',
+      'The Monroe Doctrine no longer applied to South America',
+      'European powers could freely establish colonies in the Western Hemisphere',
+      'The U.S. would no longer involve itself in Latin American affairs'
+    ],
+    correct: 0
+  },
+
+  // ----- DOMAIN 4: Establishment as a World Power (10 items) -----
+  {
+    n: 23, type: 'MS', domain: 'D4', dok: 3, std: 'SSUSH15a',
+    stem: 'Select ALL factors that pushed the United States from neutrality into engagement in WWI.',
+    options: [
+      'The sinking of the Lusitania',
+      'A military alliance with France signed in 1914',
+      'Cultural and economic ties to Britain',
+      'The Zimmermann Telegram',
+      'German unrestricted submarine warfare',
+      'Direct German military attacks on the U.S. mainland'
+    ],
+    correct: [0, 2, 3, 4]
+  },
+  {
+    n: 24, type: 'SR', domain: 'D4', dok: 2, std: 'SSUSH15b',
+    stem: 'The Great Migration during and after WWI is best described as:',
+    options: [
+      'The forced removal of Native Americans to reservations',
+      'The mass movement of African Americans from the rural South to northern industrial cities',
+      'The relocation of Japanese Americans during WWII',
+      'The arrival of European immigrants through Ellis Island'
+    ],
+    correct: 1
+  },
+  {
+    n: 25, type: 'SR', domain: 'D4', dok: 1, std: 'SSUSH15c',
+    stem: 'Wilson\u2019s Fourteen Points and the proposed League of Nations were intended to:',
+    options: [
+      'Punish Germany severely after WWI',
+      'Establish principles for lasting peace and a system of collective security',
+      'Reduce U.S. involvement in international affairs',
+      'End the practice of diplomacy among great powers'
+    ],
+    correct: 1
+  },
+  {
+    n: 26, type: 'SR', domain: 'D4', dok: 2, std: 'SSUSH16a',
+    stem: 'The Red Scare following WWI was driven primarily by:',
+    options: [
+      'Disputes about Prohibition enforcement',
+      'Concerns about the spread of communism and socialism in the U.S. after the Russian Revolution',
+      'Fears about returning veterans',
+      'Tensions with Mexico over border disputes'
+    ],
+    correct: 1
+  },
+  {
+    n: 27, type: 'SR', domain: 'D4', dok: 2, std: 'SSUSH16b',
+    stem: 'The 18th and 19th Amendments, both ratified in 1919-1920, addressed:',
+    options: [
+      'Voting rights for 18-year-olds and presidential term limits',
+      'The income tax and direct election of senators',
+      'Prohibition of alcohol and women\u2019s suffrage',
+      'Civil rights for African Americans and immigration restrictions'
+    ],
+    correct: 2
+  },
+  {
+    n: 28, type: 'SR', domain: 'D4', dok: 2, std: 'SSUSH16e',
+    stem: 'The Harlem Renaissance is best described as:',
+    options: [
+      'A flourishing of African American art, literature, and music in the 1920s',
+      'A series of legal cases that ended segregation',
+      'An economic boom in northern industrial cities',
+      'A political reform movement in New York City'
+    ],
+    correct: 0
+  },
+  {
+    n: 29, type: 'MS', domain: 'D4', dok: 3, std: 'SSUSH17a',
+    stem: 'Select ALL economic factors that contributed to the Great Depression.',
+    options: [
+      'The repeal of all banking regulations in 1932',
+      'Overproduction of agricultural and industrial goods',
+      'Underconsumption due to unequal wealth distribution',
+      'Bank failures triggered by the stock market crash of 1929',
+      'Excessive stock market speculation and buying on margin',
+      'The collapse of the Soviet economy'
+    ],
+    correct: [1, 2, 3, 4]
+  },
+  {
+    n: 30, type: 'SR', domain: 'D4', dok: 2, std: 'SSUSH17b',
+    stem: 'The Dust Bowl of the 1930s resulted primarily from:',
+    options: [
+      'The construction of the Hoover Dam',
+      'Severe drought combined with poor farming practices that depleted topsoil',
+      'Volcanic eruptions in the western United States',
+      'The dropping of atomic bombs in the Pacific'
+    ],
+    correct: 1
+  },
+  {
+    n: 31, type: 'SR', domain: 'D4', dok: 2, std: 'SSUSH18b',
+    stem: 'The Social Security Act of 1935, part of the Second New Deal, primarily:',
+    options: [
+      'Restored the gold standard',
+      'Created the modern income tax system',
+      'Established a federal program of old-age pensions and unemployment insurance',
+      'Provided unemployment relief for industrial workers only'
+    ],
+    correct: 2
+  },
+  {
+    n: 32, type: 'DD_ORDER', domain: 'D4', dok: 2, std: 'SSUSH19',
+    stem: 'Drag these WWII events into chronological order, earliest to latest.',
+    items: [
+      'Pearl Harbor attack',
+      'Battle of Midway',
+      'D-Day invasion of Normandy',
+      'Fall of Berlin',
+      'Atomic bombs dropped on Hiroshima and Nagasaki'
+    ],
+    correctOrder: [0, 1, 2, 3, 4]
+  },
+
+  // ----- DOMAIN 5: Post-WWII to the Present (10 items) -----
+  {
+    n: 33, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH20a',
+    stem: 'The Truman Doctrine and the Marshall Plan are examples of which Cold War strategy?',
+    options: [
+      'Appeasement of communist expansion',
+      'Direct nuclear confrontation with the Soviet Union',
+      'Containment of communism through economic aid and military commitments',
+      'Withdrawal from European affairs'
+    ],
+    correct: 2
+  },
+  {
+    n: 34, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH20b',
+    stem: 'The G.I. Bill, signed in 1944, contributed to postwar American society primarily by:',
+    options: [
+      'Creating a national healthcare system',
+      'Eliminating racial segregation in the U.S. military',
+      'Drafting men into the Korean War',
+      'Providing veterans with funding for college education and home loans, expanding the middle class'
+    ],
+    correct: 3
+  },
+  {
+    n: 35, type: 'SR', domain: 'D5', dok: 1, std: 'SSUSH20c',
+    stem: 'Sputnik, launched by the Soviet Union in 1957, was:',
+    options: [
+      'The first artificial Earth satellite',
+      'A military submarine',
+      'A new type of nuclear weapon',
+      'A Soviet spy plane shot down over the United States'
+    ],
+    correct: 0
+  },
+  {
+    n: 36, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH21d',
+    stem: 'Martin Luther King Jr.\u2019s "Letter from Birmingham Jail" defended:',
+    options: [
+      'The integration of public schools through busing',
+      'The use of armed self-defense by civil rights activists',
+      'Nonviolent direct action and civil disobedience as moral responses to unjust laws',
+      'The Black Power movement of the late 1960s'
+    ],
+    correct: 2
+  },
+  {
+    n: 37, type: 'MS', domain: 'D5', dok: 3, std: 'SSUSH21e',
+    stem: 'Select ALL events from 1968 that contributed to the social and political turmoil of that year.',
+    options: [
+      'The fall of the Berlin Wall',
+      'The Tet Offensive in Vietnam',
+      'The assassination of Robert F. Kennedy',
+      'The September 11 terrorist attacks',
+      'The assassination of Martin Luther King Jr.',
+      'The presidential election won by Richard Nixon'
+    ],
+    correct: [1, 2, 4, 5]
+  },
+  {
+    n: 38, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH22b',
+    stem: 'The Watergate scandal led to:',
+    options: [
+      'The impeachment and removal of President Nixon by the Senate',
+      'Nixon\u2019s resignation in 1974, followed by a pardon from President Ford',
+      'The expansion of presidential war powers',
+      'The repeal of the 22nd Amendment'
+    ],
+    correct: 1
+  },
+  {
+    n: 39, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH23a',
+    stem: 'The collapse of the Soviet Union in 1991 marked:',
+    options: [
+      'The start of the Korean War',
+      'The end of the Cold War and the emergence of the U.S. as the dominant world power',
+      'A major expansion of communist influence in Eastern Europe',
+      'The beginning of the Cold War'
+    ],
+    correct: 1
+  },
+  {
+    n: 40, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH23b',
+    stem: 'Reaganomics in the 1980s emphasized:',
+    options: [
+      'Tax cuts, deregulation, and reduced government spending on domestic programs',
+      'Increased federal spending on social welfare programs',
+      'Higher taxes on high-income earners',
+      'Nationalization of major industries'
+    ],
+    correct: 0
+  },
+  {
+    n: 41, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH23c',
+    stem: 'One major social impact of the rise of the Internet and social media has been:',
+    options: [
+      'The decline of computer-based jobs',
+      'A reduction in global communication',
+      'The end of all printed media',
+      'Faster spread of information and new forms of social, political, and economic connection'
+    ],
+    correct: 3
+  },
+  {
+    n: 42, type: 'SR', domain: 'D5', dok: 1, std: 'SSUSH23d',
+    stem: 'The 2008 presidential election was historically significant because:',
+    options: [
+      'Barack Obama became the first African American elected president of the United States',
+      'It was the first election decided by the Electoral College',
+      'It was the closest in U.S. history',
+      'A woman was elected president for the first time'
+    ],
+    correct: 0
+  },
+
+  // ----- STIMULUS-RICH ITEMS (mirroring released item formats) -----
+  {
+    n: 43, type: 'MS', domain: 'D2', dok: 3, std: 'SSUSH10c',
+    passage: 'After the Civil War, several Southern states passed laws known as "Black Codes." These laws restricted the rights of newly freed African Americans by limiting their freedom of movement, controlling what jobs they could hold, and preventing them from owning weapons or testifying against white citizens in court. In response, Congress passed the 14th and 15th Amendments and stationed federal troops in the South to enforce them.',
+    stem: 'Based on the passage, select ALL statements that describe the conflict between Congressional Reconstruction efforts and the response in Southern states.',
+    options: [
+      'Black Codes were welcomed by federal authorities',
+      'Black Codes restricted the civil rights of freed people in the South',
+      'Reconstruction succeeded in fully eliminating racial inequality',
+      'Federal troops were used to enforce Reconstruction policies in the South',
+      'Congress responded with constitutional amendments aimed at protecting freedmen',
+      'The 14th and 15th Amendments expanded the rights of formerly enslaved people'
+    ],
+    correct: [1, 3, 4, 5]
+  },
+  {
+    n: 44, type: 'MS', domain: 'D4', dok: 3, std: 'SSUSH19a',
+    source: {
+      quote: 'Yesterday, December 7, 1941 \u2014 a date which will live in infamy \u2014 the United States of America was suddenly and deliberately attacked by naval and air forces of the Empire of Japan.',
+      attribution: 'President Franklin D. Roosevelt, Address to Congress, December 8, 1941'
+    },
+    stem: 'Which TWO factors MOST directly contributed to the event described in this address?',
+    options: [
+      'American support for Stalin\u2019s policies',
+      'Japanese imperial expansion across the Pacific in the 1930s',
+      'The Bolshevik Revolution of 1917',
+      'The Japanese attack on Pearl Harbor',
+      'The signing of the Treaty of Versailles',
+      'The German invasion of Poland in 1939'
+    ],
+    correct: [1, 3]
+  },
+  {
+    n: 45, type: 'SR', domain: 'D5', dok: 2, std: 'SSUSH20b',
+    table: {
+      caption: 'U.S. Suburban Population Growth, 1950 to 1970',
+      headers: ['Year', 'Suburban Population', '% of U.S. Population'],
+      rows: [
+        ['1950', '41 million', '23%'],
+        ['1960', '60 million', '31%'],
+        ['1970', '76 million', '37%']
+      ]
+    },
+    stem: 'Which post-WWII federal policy MOST directly contributed to the population shift shown in the table?',
+    options: [
+      'The end of World War I and women gaining suffrage',
+      'The Great Depression and the New Deal of the 1930s',
+      'The G.I. Bill, which provided veterans with home loans and education funding',
+      'The outcome of the Spanish-American War'
+    ],
+    correct: 2
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  studentName: '',
+  studentBlock: '',
+  currentIdx: 0,
+  responses: {},     // { itemNum: response }
+  flags: new Set(),  // flagged itemNums (vocab)
+  startTime: null,
+  timerInterval: null
+};
+
+// ============================================================
+// GATE LOGIC
+// ============================================================
+const gateNameInput = document.getElementById('studentName');
+const gateBlockBtns = document.querySelectorAll('.block-btn');
+const gateStartBtn = document.getElementById('startBtn');
+const gateError = document.getElementById('gateError');
+let selectedBlock = '';
+
+function checkGateReady() {
+  const name = gateNameInput.value.trim();
+  gateStartBtn.disabled = !(name.length >= 2 && selectedBlock !== '');
+}
+
+gateNameInput.addEventListener('input', checkGateReady);
+gateBlockBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    gateBlockBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedBlock = btn.dataset.block;
+    checkGateReady();
+  });
+});
+
+gateStartBtn.addEventListener('click', () => {
+  const name = gateNameInput.value.trim();
+  if (name.length < 2) { gateError.textContent = 'Please enter your full name.'; return; }
+  if (!selectedBlock) { gateError.textContent = 'Please select your block.'; return; }
+  gateError.textContent = '';
+  state.studentName = name;
+  state.studentBlock = selectedBlock;
+  startTest();
+});
+
+// ============================================================
+// TEST FLOW
+// ============================================================
+function startTest() {
+  state.startTime = Date.now();
+  state.timerInterval = setInterval(updateTimer, 1000);
+  document.getElementById('paletteStudent').textContent = state.studentName + ' \u2022 Block ' + state.studentBlock;
+  document.getElementById('gate').classList.remove('active');
+  document.getElementById('test').classList.add('active');
+  buildPalette();
+  renderQuestion();
+}
+
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+  const mm = Math.floor(elapsed / 60);
+  const ss = elapsed % 60;
+  document.getElementById('timerValue').textContent = mm + ':' + (ss < 10 ? '0' + ss : ss);
+}
+
+function buildPalette() {
+  const grid = document.getElementById('paletteGrid');
+  grid.innerHTML = '';
+  ITEMS.forEach((item, idx) => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'pal-cell';
+    cell.textContent = item.n;
+    cell.dataset.idx = idx;
+    cell.addEventListener('click', () => {
+      state.currentIdx = idx;
+      renderQuestion();
+    });
+    grid.appendChild(cell);
+  });
+  refreshPalette();
+}
+
+function refreshPalette() {
+  const cells = document.querySelectorAll('.pal-cell');
+  cells.forEach((cell, idx) => {
+    cell.classList.remove('answered', 'current', 'flagged');
+    const item = ITEMS[idx];
+    if (state.responses[item.n] !== undefined) cell.classList.add('answered');
+    if (idx === state.currentIdx) cell.classList.add('current');
+    if (state.flags.has(item.n)) cell.classList.add('flagged');
+  });
+}
+
+// ============================================================
+// QUESTION RENDERING
+// ============================================================
+function renderQuestion() {
+  const item = ITEMS[state.currentIdx];
+  document.getElementById('qNum').textContent = 'Question ' + item.n + ' of ' + ITEMS.length;
+  document.getElementById('qDomain').textContent = DOMAINS[item.domain];
+  document.getElementById('qStem').textContent = item.stem;
+
+  const instr = document.getElementById('qInstruction');
+  if (item.type === 'MS') {
+    instr.textContent = 'Select ALL correct answers.';
+    instr.style.display = 'block';
+  } else if (item.type === 'DD_ORDER') {
+    instr.textContent = 'Drag items from the top into the numbered slots in order. You can drag items back out to change your answer.';
+    instr.style.display = 'block';
+  } else if (item.type === 'DD_MATCH') {
+    instr.textContent = 'Drag each item from the top to the row that matches it. You can drag items back out to change your answer.';
+    instr.style.display = 'block';
+  } else {
+    instr.style.display = 'none';
+  }
+
+  // Vocab flag button state
+  const flagBtn = document.getElementById('vocabFlagBtn');
+  if (state.flags.has(item.n)) {
+    flagBtn.classList.add('flagged');
+    flagBtn.querySelector('.label').textContent = 'Vocabulary Flagged';
+  } else {
+    flagBtn.classList.remove('flagged');
+    flagBtn.querySelector('.label').textContent = 'Flag Vocabulary';
+  }
+
+  // Stimulus (passage, primary source, or data table)
+  renderStimulus(item, document.getElementById('qStimulus'));
+
+  // Render body
+  const body = document.getElementById('qBody');
+  body.innerHTML = '';
+  if (item.type === 'SR') renderSR(item, body);
+  else if (item.type === 'MS') renderMS(item, body);
+  else if (item.type === 'DD_ORDER') renderDDOrder(item, body);
+  else if (item.type === 'DD_MATCH') renderDDMatch(item, body);
+
+  // Nav buttons
+  document.getElementById('prevBtn').disabled = (state.currentIdx === 0);
+  const nextBtn = document.getElementById('nextBtn');
+  if (state.currentIdx === ITEMS.length - 1) {
+    nextBtn.textContent = 'Submit Test';
+    nextBtn.classList.add('submit-btn');
+    nextBtn.classList.remove('primary');
+  } else {
+    nextBtn.textContent = 'Next →';
+    nextBtn.classList.add('primary');
+    nextBtn.classList.remove('submit-btn');
+  }
+
+  refreshPalette();
+}
+
+function renderStimulus(item, container) {
+  container.innerHTML = '';
+  if (item.passage) {
+    const div = document.createElement('div');
+    div.className = 'q-stimulus';
+    div.textContent = item.passage;
+    container.appendChild(div);
+  } else if (item.source) {
+    const div = document.createElement('div');
+    div.className = 'q-stimulus';
+    div.textContent = item.source.quote;
+    const attr = document.createElement('span');
+    attr.className = 'q-source-attr';
+    attr.textContent = '\u2014 ' + item.source.attribution;
+    div.appendChild(attr);
+    container.appendChild(div);
+  } else if (item.table) {
+    const wrap = document.createElement('div');
+    wrap.className = 'q-table-wrap';
+    if (item.table.caption) {
+      const cap = document.createElement('div');
+      cap.className = 'q-table-caption';
+      cap.textContent = item.table.caption;
+      wrap.appendChild(cap);
+    }
+    const table = document.createElement('table');
+    const thead = document.createElement('tr');
+    item.table.headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      thead.appendChild(th);
+    });
+    table.appendChild(thead);
+    item.table.rows.forEach(row => {
+      const tr = document.createElement('tr');
+      row.forEach(c => {
+        const td = document.createElement('td');
+        td.textContent = c;
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    wrap.appendChild(table);
+    container.appendChild(wrap);
+  }
+}
+
+function renderSR(item, body) {
+  const wrap = document.createElement('div');
+  wrap.className = 'q-options';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const currentResponse = state.responses[item.n];
+  item.options.forEach((opt, i) => {
+    const optDiv = document.createElement('div');
+    optDiv.className = 'opt';
+    if (currentResponse === i) optDiv.classList.add('selected');
+    optDiv.innerHTML = '<div class="opt-letter">' + letters[i] + '</div><div class="opt-text"></div>';
+    optDiv.querySelector('.opt-text').textContent = opt;
+    optDiv.addEventListener('click', () => {
+      state.responses[item.n] = i;
+      renderQuestion();
+    });
+    wrap.appendChild(optDiv);
+  });
+  body.appendChild(wrap);
+}
+
+function renderMS(item, body) {
+  const wrap = document.createElement('div');
+  wrap.className = 'q-options';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const currentResponse = state.responses[item.n] || [];
+  item.options.forEach((opt, i) => {
+    const optDiv = document.createElement('div');
+    optDiv.className = 'opt';
+    if (currentResponse.includes(i)) optDiv.classList.add('selected');
+    optDiv.innerHTML = '<div class="opt-letter">' + letters[i] + '</div><div class="opt-text"></div>';
+    optDiv.querySelector('.opt-text').textContent = opt;
+    optDiv.addEventListener('click', () => {
+      const sel = state.responses[item.n] ? state.responses[item.n].slice() : [];
+      const idx = sel.indexOf(i);
+      if (idx >= 0) sel.splice(idx, 1);
+      else sel.push(i);
+      state.responses[item.n] = sel;
+      renderQuestion();
+    });
+    wrap.appendChild(optDiv);
+  });
+  body.appendChild(wrap);
+}
+
+// ----- Drag-and-drop: ORDER (chronological) -----
+function renderDDOrder(item, body) {
+  const wrap = document.createElement('div');
+  wrap.className = 'dd-container';
+
+  const currentResponse = state.responses[item.n] || { source: item.items.map((_, i) => i), slots: new Array(item.items.length).fill(null) };
+  if (!state.responses[item.n]) {
+    // initialize: shuffle
+    const shuffled = item.items.map((_, i) => i);
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    currentResponse.source = shuffled;
+    state.responses[item.n] = currentResponse;
+  }
+
+  // Source pool
+  const srcZone = document.createElement('div');
+  srcZone.className = 'dd-source-zone';
+  srcZone.innerHTML = '<div class="dd-source-zone-label">Items to place</div><div class="dd-source-items" data-source="true"></div>';
+  const srcItemsDiv = srcZone.querySelector('.dd-source-items');
+  setupDropZone(srcItemsDiv, item, 'source', null);
+  currentResponse.source.forEach(itemIdx => {
+    srcItemsDiv.appendChild(makeDDItem(itemIdx, item.items[itemIdx], item.n));
+  });
+  wrap.appendChild(srcZone);
+
+  // Target slots
+  const targetList = document.createElement('div');
+  targetList.className = 'dd-target-list';
+  for (let i = 0; i < item.items.length; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'dd-slot';
+    slot.innerHTML = '<div class="dd-slot-label">' + (i + 1) + '.</div><div class="dd-drop-area" data-slot="' + i + '"></div>';
+    const dropArea = slot.querySelector('.dd-drop-area');
+    setupDropZone(dropArea, item, 'slot', i);
+    if (currentResponse.slots[i] !== null) {
+      dropArea.appendChild(makeDDItem(currentResponse.slots[i], item.items[currentResponse.slots[i]], item.n));
+    }
+    targetList.appendChild(slot);
+  }
+  wrap.appendChild(targetList);
+
+  body.appendChild(wrap);
+}
+
+// ----- Drag-and-drop: MATCH -----
+function renderDDMatch(item, body) {
+  const wrap = document.createElement('div');
+  wrap.className = 'dd-container';
+
+  if (!state.responses[item.n]) {
+    const shuffled = item.items.map((_, i) => i);
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    state.responses[item.n] = { source: shuffled, slots: new Array(item.prompts.length).fill(null) };
+  }
+  const currentResponse = state.responses[item.n];
+
+  // Source pool
+  const srcZone = document.createElement('div');
+  srcZone.className = 'dd-source-zone';
+  srcZone.innerHTML = '<div class="dd-source-zone-label">Descriptions to match</div><div class="dd-source-items" data-source="true"></div>';
+  const srcItemsDiv = srcZone.querySelector('.dd-source-items');
+  setupDropZone(srcItemsDiv, item, 'source', null);
+  currentResponse.source.forEach(itemIdx => {
+    srcItemsDiv.appendChild(makeDDItem(itemIdx, item.items[itemIdx], item.n));
+  });
+  wrap.appendChild(srcZone);
+
+  // Match rows
+  const targetList = document.createElement('div');
+  targetList.className = 'dd-target-list';
+  item.prompts.forEach((prompt, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'dd-slot match-slot';
+    slot.innerHTML = '<div class="dd-match-prompt"><strong>' + prompt.label + '</strong></div><div class="dd-drop-area" data-slot="' + i + '"></div>';
+    const dropArea = slot.querySelector('.dd-drop-area');
+    setupDropZone(dropArea, item, 'slot', i);
+    if (currentResponse.slots[i] !== null) {
+      dropArea.appendChild(makeDDItem(currentResponse.slots[i], item.items[currentResponse.slots[i]], item.n));
+    }
+    targetList.appendChild(slot);
+  });
+  wrap.appendChild(targetList);
+
+  body.appendChild(wrap);
+}
+
+function makeDDItem(itemIdx, text, qNum) {
+  const div = document.createElement('div');
+  div.className = 'dd-item';
+  div.draggable = true;
+  div.dataset.itemIdx = itemIdx;
+  div.dataset.qNum = qNum;
+  div.textContent = text;
+  div.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', itemIdx);
+    e.dataTransfer.effectAllowed = 'move';
+    div.classList.add('dragging');
+    window.__dragSource = div;
+  });
+  div.addEventListener('dragend', () => {
+    div.classList.remove('dragging');
+    window.__dragSource = null;
+  });
+  return div;
+}
+
+function setupDropZone(zone, item, kind, slotIdx) {
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', () => {
+    zone.classList.remove('drag-over');
+  });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const itemIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (isNaN(itemIdx)) return;
+    handleDrop(item, itemIdx, kind, slotIdx);
+  });
+}
+
+function handleDrop(item, itemIdx, kind, slotIdx) {
+  const r = state.responses[item.n];
+  // Remove from current location (source array OR a slot)
+  const srcPos = r.source.indexOf(itemIdx);
+  if (srcPos >= 0) {
+    r.source.splice(srcPos, 1);
+  } else {
+    for (let i = 0; i < r.slots.length; i++) {
+      if (r.slots[i] === itemIdx) { r.slots[i] = null; break; }
+    }
+  }
+  // Place at destination
+  if (kind === 'source') {
+    r.source.push(itemIdx);
+  } else {
+    // slot - if occupied, displace existing back to source
+    if (r.slots[slotIdx] !== null) {
+      r.source.push(r.slots[slotIdx]);
+    }
+    r.slots[slotIdx] = itemIdx;
+  }
+  // Mark as answered only if all slots filled
+  // (For palette display, we treat any progress as in-progress, but use slots-full as official "answered")
+  renderQuestion();
+}
+
+// Override responses tracking for DD: count as "answered" only when all slots filled
+function isDDAnswered(item) {
+  const r = state.responses[item.n];
+  if (!r) return false;
+  return r.slots && r.slots.every(s => s !== null);
+}
+
+// Modify refreshPalette to use isDDAnswered for DD types
+function refreshPaletteFixed() {
+  const cells = document.querySelectorAll('.pal-cell');
+  cells.forEach((cell, idx) => {
+    cell.classList.remove('answered', 'current', 'flagged');
+    const item = ITEMS[idx];
+    let answered = false;
+    if (item.type === 'DD_ORDER' || item.type === 'DD_MATCH') {
+      answered = isDDAnswered(item);
+    } else if (item.type === 'MS') {
+      answered = (state.responses[item.n] && state.responses[item.n].length > 0);
+    } else {
+      answered = (state.responses[item.n] !== undefined);
+    }
+    if (answered) cell.classList.add('answered');
+    if (idx === state.currentIdx) cell.classList.add('current');
+    if (state.flags.has(item.n)) cell.classList.add('flagged');
+  });
+}
+// Replace the function
+refreshPalette = refreshPaletteFixed;
+
+// ============================================================
+// VOCAB FLAG
+// ============================================================
+document.getElementById('vocabFlagBtn').addEventListener('click', () => {
+  const item = ITEMS[state.currentIdx];
+  if (state.flags.has(item.n)) state.flags.delete(item.n);
+  else state.flags.add(item.n);
+  renderQuestion();
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (state.currentIdx > 0) {
+    state.currentIdx--;
+    renderQuestion();
+  }
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (state.currentIdx === ITEMS.length - 1) {
+    submitTest();
+  } else {
+    state.currentIdx++;
+    renderQuestion();
+  }
+});
+
+// ============================================================
+// SCORING
+// ============================================================
+function scoreItem(item) {
+  const r = state.responses[item.n];
+  if (r === undefined) return false;
+  if (item.type === 'SR') {
+    return r === item.correct;
+  }
+  if (item.type === 'MS') {
+    if (!Array.isArray(r) || r.length === 0) return false;
+    const correctSet = new Set(item.correct);
+    const respSet = new Set(r);
+    if (correctSet.size !== respSet.size) return false;
+    for (const v of correctSet) if (!respSet.has(v)) return false;
+    return true;
+  }
+  if (item.type === 'DD_ORDER') {
+    if (!r.slots || r.slots.some(s => s === null)) return false;
+    return r.slots.every((s, i) => s === item.correctOrder[i]);
+  }
+  if (item.type === 'DD_MATCH') {
+    if (!r.slots || r.slots.some(s => s === null)) return false;
+    return item.prompts.every((prompt, i) => r.slots[i] === prompt.correctItem);
+  }
+  return false;
+}
+
+function getAchievementLevel(pct) {
+  if (pct >= 92) return 'Distinguished Learner';
+  if (pct >= 80) return 'Proficient Learner';
+  if (pct >= 68) return 'Developing Learner';
+  return 'Beginning Learner';
+}
+
+function getAchievementClass(level) {
+  if (level === 'Distinguished Learner') return 'distinguished';
+  if (level === 'Proficient Learner') return 'proficient';
+  if (level === 'Developing Learner') return 'developing';
+  return 'beginning';
+}
+
+// Scale score ranges from 2025-2026 Georgia Milestones EOC Test Score Ranges (U.S. History).
+function getScaleScoreRange(level) {
+  if (level === 'Distinguished Learner') return '590 to 765';
+  if (level === 'Proficient Learner') return '525 to 589';
+  if (level === 'Developing Learner') return '475 to 524';
+  return '215 to 474';
+}
+
+function getGradeConversionRange(level) {
+  if (level === 'Distinguished Learner') return '92 to 100';
+  if (level === 'Proficient Learner') return '80 to 91';
+  if (level === 'Developing Learner') return '68 to 79';
+  return '0 to 67';
+}
+
+function calcResults() {
+  const itemResults = ITEMS.map(item => ({
+    n: item.n, domain: item.domain, correct: scoreItem(item)
+  }));
+  const correctCount = itemResults.filter(r => r.correct).length;
+  const totalCount = ITEMS.length;
+  const pct = (correctCount / totalCount) * 100;
+  const level = getAchievementLevel(pct);
+
+  // Domain breakdown
+  const domainStats = {};
+  Object.keys(DOMAINS).forEach(dKey => {
+    domainStats[dKey] = { total: 0, correct: 0 };
+  });
+  itemResults.forEach(r => {
+    domainStats[r.domain].total++;
+    if (r.correct) domainStats[r.domain].correct++;
+  });
+  const domainBreakdown = Object.keys(DOMAINS).map(dKey => {
+    const s = domainStats[dKey];
+    return {
+      domain: DOMAINS[dKey],
+      domainKey: dKey,
+      percent: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
+      correct: s.correct,
+      total: s.total
+    };
+  });
+
+  return {
+    correctCount, totalCount, pct, level, itemResults, domainBreakdown
+  };
+}
+
+// ============================================================
+// SUBMIT
+// ============================================================
+function submitTest() {
+  // Confirm if unanswered items remain
+  let unanswered = 0;
+  ITEMS.forEach(item => {
+    if (item.type === 'DD_ORDER' || item.type === 'DD_MATCH') {
+      if (!isDDAnswered(item)) unanswered++;
+    } else if (item.type === 'MS') {
+      if (!state.responses[item.n] || state.responses[item.n].length === 0) unanswered++;
+    } else {
+      if (state.responses[item.n] === undefined) unanswered++;
+    }
+  });
+  if (unanswered > 0) {
+    if (!confirm('You have ' + unanswered + ' unanswered question(s). Submit anyway?')) return;
+  }
+
+  clearInterval(state.timerInterval);
+  document.getElementById('test').classList.remove('active');
+  document.getElementById('submitting').classList.add('active');
+
+  const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+  const results = calcResults();
+
+  // Send via image beacon
+  const params = new URLSearchParams({
+    studentName: state.studentName,
+    studentBlock: state.studentBlock,
+    totalScore: results.correctCount,
+    totalQuestions: results.totalCount,
+    percentCorrect: results.pct.toFixed(1),
+    achievementLevel: results.level,
+    timeUsed: elapsed,
+    timestamp: new Date().toISOString(),
+    domainBreakdown: JSON.stringify(results.domainBreakdown.map(d => ({ domain: d.domain, percent: d.percent }))),
+    vocabFlags: JSON.stringify(Array.from(state.flags).sort((a, b) => a - b))
+  });
+
+  const beacon = new Image();
+  beacon.onload = () => showResults(results, elapsed);
+  beacon.onerror = () => showResults(results, elapsed);
+  beacon.src = GAS_URL + '?' + params.toString();
+
+  // Failsafe in case beacon hangs
+  setTimeout(() => {
+    if (!document.getElementById('results').classList.contains('active')) {
+      showResults(results, elapsed);
+    }
+  }, 4000);
+}
+
+// ============================================================
+// RESULTS
+// ============================================================
+function showResults(results, elapsedSec) {
+  document.getElementById('submitting').classList.remove('active');
+  document.getElementById('results').classList.add('active');
+
+  document.getElementById('resultsStudentLine').textContent = state.studentName + ' \u2022 Block ' + state.studentBlock;
+
+  const badge = document.getElementById('achievementBadge');
+  badge.textContent = results.level;
+  badge.className = 'achievement-badge ' + getAchievementClass(results.level);
+
+  document.getElementById('scaleScoreLine').innerHTML =
+    '<strong>Scale Score Range:</strong> ' + getScaleScoreRange(results.level) +
+    ' &nbsp;\u2022&nbsp; <strong>Grade Conversion:</strong> ' + getGradeConversionRange(results.level);
+
+  document.getElementById('statScore').textContent = results.correctCount + ' / ' + results.totalCount;
+  document.getElementById('statPercent').textContent = results.pct.toFixed(1) + '%';
+  const mm = Math.floor(elapsedSec / 60);
+  const ss = elapsedSec % 60;
+  document.getElementById('statTime').textContent = mm + ':' + (ss < 10 ? '0' + ss : ss);
+  document.getElementById('statFlags').textContent = state.flags.size;
+
+  // Domain bars
+  const domainBars = document.getElementById('domainBars');
+  domainBars.innerHTML = '';
+  results.domainBreakdown.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'domain-bar-row';
+    let cls = 'lo';
+    if (d.percent >= 80) cls = 'hi';
+    else if (d.percent >= 65) cls = 'mid';
+    row.innerHTML =
+      '<div class="domain-bar-label">' + d.domain + ' <span style="color:#8693a3;font-size:12px;">(' + d.correct + '/' + d.total + ')</span></div>' +
+      '<div class="domain-bar-track"><div class="domain-bar-fill ' + cls + '" style="width:' + d.percent + '%;"></div></div>' +
+      '<div class="domain-bar-pct">' + d.percent + '%</div>';
+    domainBars.appendChild(row);
+  });
+
+  // Review list
+  const reviewList = document.getElementById('reviewList');
+  reviewList.innerHTML = '';
+  results.itemResults.forEach(r => {
+    const cell = document.createElement('div');
+    cell.className = 'review-item ' + (r.correct ? 'correct' : 'incorrect');
+    cell.innerHTML = '<div class="num">' + r.n + '</div><div class="mark">' + (r.correct ? '\u2713' : '\u2717') + '</div>';
+    reviewList.appendChild(cell);
+  });
+
+  // Vocab flags
+  const vocabSection = document.getElementById('vocabFlagSection');
+  vocabSection.innerHTML = '';
+  if (state.flags.size === 0) {
+    vocabSection.innerHTML = '<div class="empty-state">You did not flag any vocabulary terms.</div>';
+  } else {
+    const list = document.createElement('div');
+    list.className = 'vocab-flag-list';
+    Array.from(state.flags).sort((a, b) => a - b).forEach(qNum => {
+      const item = ITEMS.find(it => it.n === qNum);
+      const tag = document.createElement('span');
+      tag.className = 'vocab-flag-tag';
+      tag.innerHTML = 'Q' + qNum + '<span class="domain-mini">' + DOMAINS[item.domain] + '</span>';
+      list.appendChild(tag);
+    });
+    vocabSection.appendChild(list);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
